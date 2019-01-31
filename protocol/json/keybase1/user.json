@@ -325,6 +325,20 @@
           "name": "res"
         }
       ]
+    },
+    {
+      "type": "record",
+      "name": "CanLogoutRes",
+      "fields": [
+        {
+          "type": "boolean",
+          "name": "canLogout"
+        },
+        {
+          "type": "string",
+          "name": "reason"
+        }
+      ]
     }
   ],
   "messages": {
@@ -715,6 +729,15 @@
         }
       ],
       "response": "boolean"
+    },
+    "canLogout": {
+      "request": [
+        {
+          "name": "sessionID",
+          "type": "int"
+        }
+      ],
+      "response": "CanLogoutRes"
     }
   },
   "namespace": "keybase.1"
