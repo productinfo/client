@@ -37,6 +37,7 @@ const (
 	methodListConvsOnName = "listconvsonname"
 	methodJoin            = "join"
 	methodLeave           = "leave"
+	methodDeleteChannel   = "delete_channel"
 )
 
 type RateLimit struct {
@@ -69,6 +70,7 @@ type ChatAPIHandler interface {
 	ListConvsOnNameV1(context.Context, Call, io.Writer) error
 	JoinV1(context.Context, Call, io.Writer) error
 	LeaveV1(context.Context, Call, io.Writer) error
+	DeleteChannelV1(context.Context, Call, io.Writer) error
 }
 
 // ChatAPI implements ChatAPIHandler and contains a ChatServiceHandler
@@ -428,7 +430,7 @@ type joinOptionsV1 struct {
 }
 
 func (o joinOptionsV1) Check() error {
-	if err := checkChannelConv(methodNewConv, o.Channel); err != nil {
+	if err := checkChannelConv(methodJoin, o.Channel); err != nil {
 		return err
 	}
 	return nil
@@ -439,7 +441,18 @@ type leaveOptionsV1 struct {
 }
 
 func (o leaveOptionsV1) Check() error {
-	if err := checkChannelConv(methodNewConv, o.Channel); err != nil {
+	if err := checkChannelConv(methodLeave, o.Channel); err != nil {
+		return err
+	}
+	return nil
+}
+
+type deleteChannelOptionsV1 struct {
+	Channel ChatChannel
+}
+
+func (o deleteChannelOptionsV1) Check() error {
+	if err := checkChannelConv(methodDeleteChannel, o.Channel); err != nil {
 		return err
 	}
 	return nil
@@ -718,6 +731,20 @@ func (a *ChatAPI) LeaveV1(ctx context.Context, c Call, w io.Writer) error {
 		return err
 	}
 	return a.encodeReply(c, a.svcHandler.LeaveV1(ctx, opts), w)
+}
+
+func (a *ChatAPI) DeleteChannelV1(ctx context.Context, c Call, w io.Writer) error {
+	if len(c.Params.Options) == 0 {
+		return ErrInvalidOptions{version: 1, method: methodDeleteChannel, err: errors.New("empty options")}
+	}
+	var opts deleteChannelOptionsV1
+	if err := json.Unmarshal(c.Params.Options, &opts); err != nil {
+		return err
+	}
+	if err := opts.Check(); err != nil {
+		return err
+	}
+	return a.encodeReply(c, a.svcHandler.DeleteChannelV1(ctx, opts), w)
 }
 
 func (a *ChatAPI) encodeReply(call Call, reply Reply, w io.Writer) error {

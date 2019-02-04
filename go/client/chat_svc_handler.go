@@ -37,6 +37,7 @@ type ChatServiceHandler interface {
 	ListConvsOnNameV1(context.Context, listConvsOnNameOptionsV1) Reply
 	JoinV1(context.Context, joinOptionsV1) Reply
 	LeaveV1(context.Context, leaveOptionsV1) Reply
+	DeleteChannelV1(context.Context, deleteChannelOptionsV1) Reply
 }
 
 // chatServiceHandler implements ChatServiceHandler.
@@ -254,6 +255,31 @@ func (c *chatServiceHandler) LeaveV1(ctx context.Context, opts leaveOptionsV1) R
 		return c.errReply(err)
 	}
 	res, err := client.LeaveConversationLocal(ctx, convID)
+	if err != nil {
+		return c.errReply(err)
+	}
+	allLimits := append(rl, res.RateLimits...)
+	cres := EmptyRes{
+		RateLimits: RateLimits{
+			c.aggRateLimits(allLimits),
+		},
+	}
+	return Reply{Result: cres}
+}
+
+func (c *chatServiceHandler) DeleteChannelV1(ctx context.Context, opts deleteChannelOptionsV1) Reply {
+	client, err := GetChatLocalClient(c.G())
+	if err != nil {
+		return c.errReply(err)
+	}
+	convID, rl, err := c.resolveAPIConvID(ctx, opts.Channel)
+	if err != nil {
+		return c.errReply(err)
+	}
+	res, err := client.DeleteConversationLocal(ctx, chat1.DeleteConversationLocalArg{
+		ConvID:      convID,
+		ChannelName: opts.Channel.TopicName,
+	})
 	if err != nil {
 		return c.errReply(err)
 	}
