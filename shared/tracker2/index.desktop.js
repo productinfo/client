@@ -132,7 +132,7 @@ const Tracker = (props: Props) => {
 
   const buttons = getButtons(props)
 
-  // In order to keep the 'effect' of the card sliding up on top of the text the text is below the scroll area. We still need the spacing so we draw the text inside the scroll but invisible
+  // Keep the header outside the scrollable area so the close button stays uncovered
 
   return (
     <Kb.Box2 direction="vertical" fullWidth={true} fullHeight={true} style={styles.container}>
